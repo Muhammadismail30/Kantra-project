@@ -1,12 +1,30 @@
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config(); // Pastikan dotenv dipanggil di paling atas
+const { sequelize, connectDB } = require('./config/db');
+const { User, Board, Column, Card } = require('./models');
+
 const app = express();
 
-app.use(cors()); // Mengizinkan semua origin
-app.use(express.json()); // Agar backend bisa membaca request body berformat JSON
+// Import Routes
+const boardRoutes = require('./routes/boardRoutes');
+const authRoutes = require('./routes/authRoutes');
 
-app.get('/api/test', (req, res) => {
-    res.json({ message: "Koneksi Backend Berhasil!" });
-});
+// Middleware
+app.use(cors()); 
+app.use(express.json());
 
-app.listen(5000, () => console.log('Server jalan di port 5000'));
+// Jalankan Koneksi DB
+connectDB();
+
+// Daftar Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/boards', boardRoutes);
+
+// Sinkronisasi Tabel
+sequelize.sync({ alter: true })
+  .then(() => console.log("✅ Tabel berhasil disinkronkan"))
+  .catch(err => console.log("❌ Gagal sinkronisasi:", err));
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server jalan di port ${PORT}`));
