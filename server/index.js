@@ -9,6 +9,8 @@ const app = express();
 // Import Routes
 const boardRoutes = require('./routes/boardRoutes');
 const authRoutes = require('./routes/authRoutes');
+const columnRoutes = require('./routes/columnRoutes');
+const cardRoutes = require('./routes/cardRoutes');
 
 // Middleware
 app.use(cors()); 
@@ -20,6 +22,8 @@ connectDB();
 // Daftar Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/boards', boardRoutes);
+app.use('/api/columns', columnRoutes);
+app.use('/api/cards', cardRoutes);
 
 // Sinkronisasi Tabel
 sequelize.sync({ alter: true })

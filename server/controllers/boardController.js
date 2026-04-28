@@ -1,4 +1,4 @@
-const { Board } = require('../models');
+const { Board, Column, Card } = require('../models');
 
 // 1. Membuat Board Baru
 exports.createBoard = async (req, res) => {
@@ -41,16 +41,16 @@ exports.getAllBoards = async (req, res) => {
 exports.getBoardDetail = async (req, res) => {
     try {
         const board = await Board.findOne({
-            where: { id: req.params.id, owner_id: req.user.id }
+            where: { id: req.params.id, owner_id: req.user.id },
+            include: [
+                {
+                    model: Column,
+                    include: [Card] // Ini akan mengambil Board -> Columns -> Cards secara otomatis
+                }
+            ]
         });
-
-        if (!board) {
-            return res.status(404).json({ message: 'Board tidak ditemukan' });
-        }
-
         res.json(board);
     } catch (err) {
-        console.error(err.message);
         res.status(500).send('Server Error');
     }
 };
