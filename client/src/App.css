@@ -2,11 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom class untuk shadow agar aman dari eror parsing Tailwind */
-.kantra-card-shadow {
-  box-shadow: 0px 0px 25px 10px #7B61FF !important;
-}
-
 body {
-  @apply bg-[#0a0a0c] m-0 p-0 overflow-hidden;
+  background-color: #0a0a0c;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
