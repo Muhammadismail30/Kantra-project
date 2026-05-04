@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import logoKantra from '../assets/logo-kantra.png';
 import logoGoogle from '../assets/logo-google.png';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -17,7 +19,8 @@ const Login = () => {
         password: password
       });
       console.log("Login Berhasil:", response.data);
-      alert("Login Berhasil!");
+      localStorage.setItem('token', response.data.token);
+      navigate('/dashboard');
     } catch (error) {
       console.error("Gagal Login:", error.response?.data || error.message);
       alert("Login gagal, cek konsol!");
