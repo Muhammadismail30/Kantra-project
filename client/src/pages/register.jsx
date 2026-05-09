@@ -13,7 +13,7 @@ const Register = () => {
     const apiUrl = import.meta.env.VITE_API_URL;
 
     try {
-      await axios.post(`${apiUrl}/auth/register`, { username, email, password });
+      await axios.post(`${apiUrl}/auth/register`, { name:username, email, password });
       alert("Registrasi Berhasil! Silakan Login.");
     } catch (error) {
       console.error("Gagal Register:", error.response?.data || error.message);

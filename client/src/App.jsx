@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Welcome from './pages/Welcome';
-import Dashboard from './pages/dashboard';
+import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/protectedRoute';
 
 
@@ -15,12 +15,12 @@ function App() {
         <Route path="/" element={<Welcome />} />
         
         {/* Rute ke halaman Auth yang baru kita buat */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/Login" element={<Login />} />
+        <Route path="/Register" element={<Register />} />
 
         {/* Rute ke Dashboard yang dilindungi oleh ProtectedRoute */}
         <Route 
-          path="/dashboard"
+          path="/Dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />

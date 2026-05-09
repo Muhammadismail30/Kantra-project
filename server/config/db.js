@@ -7,7 +7,7 @@ const sequelize = new Sequelize(
   process.env.DB_USER,     // Username database (default: root)
   process.env.DB_PASSWORD, // Password database
   {
-    host: process.env.DB_HOST, // Biasanya localhost
+    host: process.env.DB_HOST || 'localhost', // Biasanya localhost
     dialect: 'mysql',          // Kita pakai MySQL
     logging: false,            // Agar terminal tidak penuh dengan log SQL
   }
