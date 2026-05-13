@@ -8,14 +8,15 @@ exports.createCard = async (req, res) => {
         const newCard = await Card.create({
             column_id,
             title,
-            description,
-            priority,
-            deadline,
+            description: description || '', 
+            priority: priority || 'Medium', // Sesuaikan jika kamu pakai nilai lain seperti 'Low'/'High'
+            deadline: deadline || null,
             order_position: order_position || 0
         });
 
         res.status(201).json(newCard);
     } catch (err) {
+        console.error("Error dari MySQL (Create Card):", err);
         res.status(500).send('Server Error');
     }
 };

@@ -12,6 +12,7 @@ exports.createColumn = async (req, res) => {
 
         res.status(201).json(newColumn);
     } catch (err) {
+        console.error("Error dari MySQL (Create Column):", err.message);
         res.status(500).send('Server Error');
     }
 };

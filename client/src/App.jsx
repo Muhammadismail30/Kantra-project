@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import Welcome from './pages/Welcome';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/protectedRoute';
+import Board from './pages/Board';
 
 
 function App() {
@@ -24,6 +25,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/board/:id"
+          element={
+            <ProtectedRoute>
+              <Board />
             </ProtectedRoute>
           }
         />

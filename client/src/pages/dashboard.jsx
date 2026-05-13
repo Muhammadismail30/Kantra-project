@@ -64,6 +64,13 @@ const Dashboard = () => {
         navigate('/login'); // Arahkan ke halaman login setelah logout
     };
 
+    // fungsi menu sidebar
+    const toggleSidebar = () => {
+        const sidebar = document.querySelector('aside');
+        sidebar.classList.toggle('hidden');
+        
+    };
+
   return (
     <div className="h-screen w-screen bg-[#0a0a0c] flex font-sans overflow-hidden text-white m-0 p-0 absolute top-0 left-0">
       
