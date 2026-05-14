@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # 1. Container Database MySQL
   db:
     image: mysql:8.0
     container_name: kantra_mysql
@@ -14,14 +13,13 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
-  # 2. Container Backend (Express)
   backend:
     build: ./server
     container_name: kantra_backend
+    restart: on-failure
     ports:
       - "5000:5000"
     environment:
-      # Koneksi database diubah menunjuk ke nama container "db", BUKAN localhost
       - DB_HOST=db 
       - DB_USER=root
       - DB_PASSWORD=rootpassword
@@ -29,19 +27,18 @@ services:
       - JWT_SECRET=rahasia_super_kantra_2026
     depends_on:
       - db
+   
+    command: sh -c "sleep 10 && npm start"
 
-  # 3. Container Frontend (Vite React)
   frontend:
     build: ./client
     container_name: kantra_frontend
     ports:
       - "5173:5173"
     environment:
-      # URL Backend untuk Axios
       - VITE_API_URL=http://localhost:5000/api
     depends_on:
       - backend
 
-# Volume untuk menyimpan data MySQL agar tidak hilang saat Docker dimatikan
 volumes:
   db_data:

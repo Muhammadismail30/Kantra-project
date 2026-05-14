@@ -30,5 +30,11 @@ sequelize.sync({ alter: true })
   .then(() => console.log("✅ Tabel berhasil disinkronkan"))
   .catch(err => console.log("❌ Gagal sinkronisasi:", err));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server jalan di port ${PORT}`));
+// JANGAN jalankan app.listen secara otomatis jika sedang mode testing
+if (process.env.NODE_ENV !== 'test') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`Server jalan di port ${PORT}`));
+}
+
+// WAJIB DITAMBAHKAN: Ekspor app agar bisa dibaca oleh Supertest dan Jest
+module.exports = app;
