@@ -5,5 +5,7 @@ const authMiddleware = require('../middleware/auth');
 
 router.post('/', authMiddleware, columnController.createColumn);
 router.get('/board/:boardId', authMiddleware, columnController.getColumnsByBoard);
+router.delete('/:id', authMiddleware, columnController.deleteColumn);
+router.put('/:id', authMiddleware, columnController.updateColumn);
 
 module.exports = router;

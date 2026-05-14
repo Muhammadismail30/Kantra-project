@@ -9,8 +9,14 @@ const Card = sequelize.define('Card', {
     priority: { type: ENUM('low', 'medium', 'high'), allowNull: false },
     deadline: { type: DataTypes.DATE, allowNull: true },
     order_position: { type: DataTypes.FLOAT, allowNull: false },
-    create_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+    create_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    // Contoh di Sequelize
+    color: {
+        type: DataTypes.STRING,
+        allowNull: true
+    }
 
 });
+
 
 module.exports = Card;

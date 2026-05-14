@@ -6,5 +6,6 @@ const auth = require('../middleware/auth');
 router.post('/', auth, cardController.createCard);
 router.get('/column/:columnId', auth, cardController.getCardsByColumn);
 router.put('/:id', auth, cardController.updateCard);
+router.delete('/:id', auth, cardController.deleteCard);
 
 module.exports = router;
