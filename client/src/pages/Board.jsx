@@ -15,6 +15,7 @@ const Board = () => {
   const [boardDetail, setBoardDetail] = useState(null);
   const [columns, setColumns] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [isAddingColumn, setIsAddingColumn] = useState(false);
 
@@ -24,6 +25,48 @@ const Board = () => {
   const [editColColor, setEditColColor] = useState('');   
   const [cardMenuStatus, setCardMenuStatus] = useState({ id: null, top: 0, left: 0 });
   const [colMenuStatus, setColMenuStatus] = useState({ id: null, top: 0, left: 0 });
+
+  // --- STATE UNTUK KOLABORASI (SHARE & TEAM) ---
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [boardMembers, setBoardMembers] = useState([]);
+  const [emailToShare, setEmailToShare] = useState('');
+  const [shareLoading, setShareLoading] = useState(false);
+
+  const fetchBoardMembers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await axios.get(`${apiUrl}/boards/${id}/members`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBoardMembers(response.data);
+    } catch (error) {
+      console.error("Gagal mengambil daftar anggota:", error);
+    }
+  };
+
+  const handleShareBoard = async (e) => {
+    e.preventDefault();
+    if (!emailToShare.trim()) return;
+    setShareLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const apiUrl = import.meta.env.VITE_API_URL;
+      
+      await axios.post(`${apiUrl}/boards/${id}/members`, { email: emailToShare }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setEmailToShare('');
+      fetchBoardMembers(); // Refresh daftar anggota
+      alert("Berhasil mengundang anggota!");
+    } catch (error) {
+      alert(error.response?.data?.message || "Gagal mengundang anggota. Pastikan email terdaftar.");
+    } finally {
+      setShareLoading(false);
+    }
+  };
 
   // Helper: Menghitung sisa hari untuk Deadline
   const getDeadlineText = (deadline) => {
@@ -174,6 +217,9 @@ const Board = () => {
       setColumns(response.data.Columns || []);
     } catch (error) {
       console.error("Gagal mengambil detail board:", error);
+      if (error.response && error.response.status === 403) {
+        setErrorMsg('Anda tidak memiliki akses ke board ini');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -181,6 +227,7 @@ const Board = () => {
 
   useEffect(() => {
     fetchBoardDetail();
+    fetchBoardMembers();
   }, [id]);
 
   // --- FUNGSI DRAG AND DROP ---
@@ -313,7 +360,7 @@ const Board = () => {
       title: card.title, 
       description: card.description || '', 
       priority: card.priority || 'Medium',
-      color: card.color || softColors[0].value, // Tambahkan ini
+      color: card.color || softColors[0].value, 
       deadline: card.deadline ? card.deadline.split('T')[0] : '', 
       column_id: card.column_id, 
       order_position: card.order_position
@@ -343,24 +390,8 @@ const Board = () => {
     }
   };
 
-const CardMenuPortal = ({ children, top, left }) => {
-  const style = {
-    position: 'fixed',
-    top: `${top}px`,
-    left: `${left}px`,
-    zIndex: 9999,
-    width: '10rem',
-  };
-
-  return ReactDOM.createPortal(
-    <div style={style} onClick={(e) => e.stopPropagation()}>
-      {children}
-    </div>,
-    document.body
-  );
-};
-
   if (isLoading) return <div className="h-screen w-screen bg-[#0a0a0c] flex items-center justify-center text-white"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7B61FF]"></div></div>;
+  if (errorMsg) return <div className="h-screen w-screen bg-[#0a0a0c] flex flex-col items-center justify-center text-white gap-4"><h2 className="text-xl font-bold text-red-500">{errorMsg}</h2><button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-[#7B61FF] rounded-lg font-bold hover:bg-purple-500 transition-colors">Kembali ke Dashboard</button></div>;
   if (!boardDetail) return <div className="h-screen w-screen bg-[#0a0a0c] flex flex-col items-center justify-center text-white gap-4"><h2 className="text-xl font-bold">Board tidak ditemukan</h2><button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-[#7B61FF] rounded-lg">Kembali</button></div>;
 
   return (
@@ -403,9 +434,30 @@ const CardMenuPortal = ({ children, top, left }) => {
             
           </div>
 
-          {/* BAGIAN KANAN */}
+          {/* BAGIAN KANAN: Auto-saved, Team Avatar, Share Button */}
           <div className="flex items-center gap-4">
-            <span className="text-[12px] text-gray-500 font-medium">Auto-saved</span>
+            <span className="text-[12px] text-gray-500 font-medium mr-4">Auto-saved</span>
+            
+            <div className="flex items-center gap-4">
+              {/* Avatar Anggota Tim */}
+              <div className="flex -space-x-3">
+                {boardMembers.slice(0, 4).map((member, idx) => (
+                  <div key={idx} className="w-9 h-9 rounded-full bg-[#7B61FF] border-2 border-[#0a0a0c] flex items-center justify-center text-white text-xs font-bold shadow-sm" title={member.name}>
+                    {member.name.charAt(0).toUpperCase()}
+                  </div>
+                ))}
+                {boardMembers.length > 4 && (
+                  <div className="w-9 h-9 rounded-full bg-[#1A1A24] border-2 border-[#0a0a0c] flex items-center justify-center text-gray-400 text-xs font-bold shadow-sm">
+                    +{boardMembers.length - 4}
+                  </div>
+                )}
+              </div>
+
+              <button onClick={() => setIsShareModalOpen(true)} className="bg-[#e5e5e5] text-black px-6 py-2 rounded-lg font-bold text-sm hover:bg-white transition-colors shadow-sm flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+                Share
+              </button>
+            </div>
           </div>
         </header>
 
@@ -780,6 +832,61 @@ const CardMenuPortal = ({ children, top, left }) => {
 
       <style>{`.custom-scrollbar::-webkit-scrollbar { width: 4px; } .custom-scrollbar::-webkit-scrollbar-track { background: transparent; } .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; } .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); }`}</style>
 
+      {/* ================= MODAL SHARE BOARD ================= */}
+      {isShareModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-[#1A1A24] rounded-2xl w-full max-w-[500px] flex flex-col relative shadow-[0_0_25px_10px_rgba(123,97,255,0.15)] border border-white/10 overflow-hidden">
+            
+            {/* Header Modal */}
+            <div className="bg-[#0a0a0c] p-6 border-b border-white/5 flex justify-between items-center">
+              <h2 className="text-white text-lg font-bold">Share Board</h2>
+              <button onClick={() => setIsShareModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+
+            {/* Konten Form Share */}
+            <div className="p-6">
+              <form onSubmit={handleShareBoard} className="flex gap-3 mb-6">
+                <input 
+                  type="email" 
+                  placeholder="Enter email address..." 
+                  value={emailToShare}
+                  onChange={(e) => setEmailToShare(e.target.value)}
+                  className="flex-1 bg-[#0a0a0c] border border-white/10 rounded-xl px-4 py-2.5 text-white text-[14px] outline-none focus:border-[#7B61FF]"
+                  required
+                />
+                <button type="submit" disabled={shareLoading} className="px-5 py-2.5 rounded-xl text-white font-bold bg-[#7B61FF] hover:bg-purple-500 disabled:opacity-50">
+                  {shareLoading ? 'Sending...' : 'Invite'}
+                </button>
+              </form>
+
+              {/* Daftar Anggota Tim (FR-10) */}
+              <div>
+                <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3">Board Members ({boardMembers.length})</h3>
+                <div className="flex flex-col gap-3 max-h-[250px] overflow-y-auto custom-scrollbar pr-2">
+                  {boardMembers.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[#7B61FF]/20 text-[#7B61FF] flex items-center justify-center font-bold">
+                          {member.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-white font-bold text-[14px]">{member.name}</p>
+                          <p className="text-gray-500 text-[12px]">{member.email}</p>
+                        </div>
+                      </div>
+                      <span className="text-gray-400 text-[12px] font-medium bg-[#0a0a0c] px-3 py-1 rounded-lg">Member</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
       {/* ================= MODAL ADD CARD ================= */}
       {isAddCardModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -878,10 +985,7 @@ const CardMenuPortal = ({ children, top, left }) => {
         </div>
       )}
 
-    
     </div>
-
-
   );
 };
 

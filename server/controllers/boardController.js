@@ -1,4 +1,4 @@
-const { Board, Column, Card } = require('../models');
+const { Board, Column, Card, User } = require('../models');
 
 // 1. Membuat Board Baru
 exports.createBoard = async (req, res) => {
@@ -25,30 +25,73 @@ exports.createBoard = async (req, res) => {
 // 2. Mengambil Semua Board milik User yang sedang login
 exports.getAllBoards = async (req, res) => {
     try {
-        const boards = await Board.findAll({
-            where: { owner_id: req.user.id },
-            order: [['createdAt', 'DESC']]
+        const userId = req.user.id;
+
+        // Ambil boards yang dimiliki user secara pribadi
+        const ownedBoards = await Board.findAll({
+            where: { owner_id: userId }
         });
 
-        res.json(boards);
+        // Ambil boards di mana user diundang sebagai anggota
+        const user = await User.findByPk(userId, {
+            include: [{
+                model: Board,
+                as: 'SharedBoards',
+                through: { attributes: [] }
+            }]
+        });
+
+        const sharedBoards = user && user.SharedBoards ? user.SharedBoards : [];
+
+        // Gabungkan boards untuk menghindari duplikasi
+        const allBoardsMap = new Map();
+        ownedBoards.forEach(board => allBoardsMap.set(board.id, board));
+        sharedBoards.forEach(board => allBoardsMap.set(board.id, board));
+
+        // Ubah menjadi array dan urutkan dari terbaru
+        const allBoards = Array.from(allBoardsMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        res.json(allBoards);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
     }
 };
 
-// 3. Mengambil Detail Board (Opsional: untuk melihat isi kolom dan kartu nanti)
+// 3. Mengambil Detail Board (Untuk owner & member yang diinvite)
 exports.getBoardDetail = async (req, res) => {
     try {
+        const boardId = req.params.id;
+        const userId = req.user.id;
+
         const board = await Board.findOne({
-            where: { id: req.params.id, owner_id: req.user.id },
+            where: { id: boardId },
             include: [
                 {
                     model: Column,
                     include: [Card] // Ini akan mengambil Board -> Columns -> Cards secara otomatis
+                },
+                {
+                    model: User,
+                    as: 'Users',
+                    attributes: ['id'],
+                    through: { attributes: [] }
                 }
             ]
         });
+
+        if (!board) {
+            return res.status(404).json({ message: 'Board tidak ditemukan' });
+        }
+
+        // Cek otorisasi: Izinkan masuk jika user adalah owner ATAU jika user di-invite sebagai member
+        const isOwner = board.owner_id === userId;
+        const isMember = board.Users && board.Users.some(u => u.id === userId);
+
+        if (!isOwner && !isMember) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke board ini' });
+        }
+
         res.json(board);
     } catch (err) {
         res.status(500).send('Server Error');
@@ -70,6 +113,59 @@ exports.deleteBoard = async (req, res) => {
         res.json({ message: 'Board berhasil dihapus' });
     } catch (err) {
         console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+};
+
+exports.addMemberToBoard = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const boardId = req.params.id;
+
+        // 1. Cari pengguna berdasarkan email
+        const userToAdd = await User.findOne({ where: { email } });
+        if (!userToAdd) {
+            return res.status(404).json({ message: 'Pengguna dengan email tersebut tidak ditemukan.' });
+        }
+
+        // 2. Cari board
+        const board = await Board.findByPk(boardId);
+        if (!board) {
+            return res.status(404).json({ message: 'Board tidak ditemukan.' });
+        }
+
+        // 3. Tambahkan relasi ke tabel junction (Asumsi menggunakan metode otomatis Sequelize)
+        // Pastikan di models/index.js kamu sudah mengatur: Board.belongsToMany(User, { through: 'BoardMembers' })
+        await board.addUser(userToAdd);
+
+        res.status(200).json({ message: 'Anggota berhasil ditambahkan!', user: { id: userToAdd.id, name: userToAdd.name, email: userToAdd.email } });
+    } catch (err) {
+        console.error("Error dari MySQL (Share Board):", err);
+        res.status(500).send('Server Error');
+    }
+};
+
+// [FR-10] Mengambil daftar anggota dalam satu Board
+exports.getBoardMembers = async (req, res) => {
+    try {
+        const boardId = req.params.id;
+        
+        const board = await Board.findByPk(boardId, {
+            include: [{
+                model: User,
+                as: 'Users', // Pastikan ini sesuai dengan alias yang kamu buat di models/index.js
+                attributes: ['id', 'name', 'email'], // Jangan bawa password
+                through: { attributes: [] } // Sembunyikan atribut tabel junction
+            }]
+        });
+
+        if (!board) {
+            return res.status(404).json({ message: 'Board tidak ditemukan.' });
+        }
+
+        res.status(200).json(board.Users);
+    } catch (err) {
+        console.error("Error dari MySQL (Get Members):", err);
         res.status(500).send('Server Error');
     }
 };
