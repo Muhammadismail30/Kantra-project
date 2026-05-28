@@ -1,4 +1,4 @@
-const { Card } = require('../models');
+const { Card, Comment, User } = require('../models');
 
 // 1. Tambah Kartu Baru
 exports.createCard = async (req, res) => {
@@ -44,7 +44,8 @@ exports.updateCard = async (req, res) => {
       priority, 
       color, 
       column_id,        
-      order_position    
+      order_position,
+      is_completed    
     } = req.body; 
 
     const card = await Card.findByPk(req.params.id);
@@ -60,7 +61,8 @@ exports.updateCard = async (req, res) => {
       priority, 
       color,
       column_id,      
-      order_position    
+      order_position,
+      is_completed    
     });
 
     res.json(card);
@@ -77,4 +79,38 @@ exports.deleteCard = async (req, res) => {
         await card.destroy();
         res.json({ message: 'Card deleted' });
     } catch (err) { res.status(500).send('Server Error'); }
+};
+
+// Menambahkan komentar pada kartu
+exports.addComment = async (req, res) => {
+    try {
+        const { text } = req.body;
+        const cardId = req.params.id;
+        
+        const newComment = await Comment.create({
+            text,
+            card_id: cardId,
+            user_id: req.user.id
+        });
+
+        res.status(201).json(newComment);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
+
+// Mengambil semua komentar dalam satu kartu
+exports.getComments = async (req, res) => {
+    try {
+        const comments = await Comment.findAll({
+            where: { card_id: req.params.id },
+            include: [{ model: User, as: 'Author', attributes: ['name', 'email'] }],
+            order: [['createdAt', 'ASC']]
+        });
+        res.json(comments);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
 };

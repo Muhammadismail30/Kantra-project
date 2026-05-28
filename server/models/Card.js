@@ -14,7 +14,12 @@ const Card = sequelize.define('Card', {
     color: {
         type: DataTypes.STRING,
         allowNull: true
-    }
+    },
+    // Tambahkan baris ini di dalam definisi kolom Card
+    is_completed: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
 
 });
 

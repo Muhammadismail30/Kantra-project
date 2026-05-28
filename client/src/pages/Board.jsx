@@ -200,6 +200,11 @@ const Board = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [editCardData, setEditCardData] = useState(null);
 
+  // --- STATE UNTUK KOMENTAR ---
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [isCommentLoading, setIsCommentLoading] = useState(false);
+
   // State untuk Modal Add Card
   const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
   const [addCardData, setAddCardData] = useState({
@@ -365,6 +370,7 @@ const Board = () => {
       column_id: card.column_id, 
       order_position: card.order_position
     });
+    fetchComments(card.id);
   };
 
   const handleUpdateCard = async (e) => {
@@ -388,6 +394,44 @@ const Board = () => {
     } catch (error) { 
       console.error("Gagal update kartu:", error); 
     }
+  };
+
+  // --- FUNGSI TOGGLE CHECKBOX (SELESAI) ---
+  const handleToggleComplete = async (e, card) => {
+    e.stopPropagation(); // Mencegah modal terbuka saat klik checkbox
+    try {
+      const token = localStorage.getItem('token');
+      const apiUrl = import.meta.env.VITE_API_URL;
+      await axios.put(`${apiUrl}/cards/${card.id}`, {
+        ...card,
+        is_completed: !card.is_completed
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      fetchBoardDetail();
+    } catch (error) { console.error("Gagal update status:", error); }
+  };
+
+  // --- FUNGSI MENGAMBIL & MENAMBAH KOMENTAR ---
+  const fetchComments = async (cardId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const res = await axios.get(`${apiUrl}/cards/${cardId}/comments`, { headers: { Authorization: `Bearer ${token}` } });
+      setComments(res.data);
+    } catch (error) { console.error("Gagal load komentar:", error); }
+  };
+
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    setIsCommentLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const apiUrl = import.meta.env.VITE_API_URL;
+      await axios.post(`${apiUrl}/cards/${selectedCard.id}/comments`, { text: newComment }, { headers: { Authorization: `Bearer ${token}` } });
+      setNewComment('');
+      fetchComments(selectedCard.id); // Refresh komen
+    } catch (error) { console.error("Gagal tambah komen:", error); }
+    finally { setIsCommentLoading(false); }
   };
 
   if (isLoading) return <div className="h-screen w-screen bg-[#0a0a0c] flex items-center justify-center text-white"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7B61FF]"></div></div>;
@@ -602,16 +646,51 @@ const Board = () => {
                                 
                                 <div className="flex justify-between items-start gap-2">
                                   <div className="flex flex-col items-start flex-1 overflow-hidden">
-                                    <h3 className="font-bold text-[16px] text-white leading-snug text-left truncate w-full">
+  
+                                  {/* AREA ATAS: CHECKBOX & JUDUL */}
+                                  <div className="flex items-start gap-2.5 w-full">
+                                    {/* CHECKBOX */}
+                                    <div 
+                                      onClick={(e) => handleToggleComplete(e, card)}
+                                      className={`mt-0.5 w-4 h-4 shrink-0 rounded-[4px] border-[1.5px] flex items-center justify-center cursor-pointer transition-all ${card.is_completed ? 'bg-green-500 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'border-gray-500 hover:border-[#7B61FF]'}`}
+                                      title="Mark as completed"
+                                    >
+                                      {card.is_completed && (
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                          <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                      )}
+                                    </div>
+                                    
+                                    <h3 className={`font-bold text-[15px] leading-snug text-left w-full transition-all ${card.is_completed ? 'text-gray-500 line-through' : 'text-white'}`}>
                                       {card.title}
                                     </h3>
+                                  </div>
+                                  
+                                  {/* AREA BAWAH: METADATA (Deadline & Ikon Komentar) */}
+                                  <div className="flex items-center gap-3 mt-2.5 pl-6">
                                     
+                                    {/* Tanggal Deadline */}
                                     {card.deadline && (
-                                      <div className="mt-1 text-gray-500 text-[12px] font-bold text-left">
+                                      <div className={`text-[11px] font-bold flex items-center gap-1.5 px-1.5 py-0.5 rounded-md ${card.is_completed ? 'text-gray-500' : 'bg-white/5 text-gray-400'}`}>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                         {getDeadlineText(card.deadline)}
                                       </div>
                                     )}
+
+                                    {/* Ikon Indikator Komentar */}
+                                    <div 
+                                      className="text-gray-500 hover:text-[#7B61FF] text-[11px] font-bold flex items-center gap-1.5 transition-colors"
+                                      title="Click card to open discussion"
+                                    >
+                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                      </svg>
+                                      <span>Discuss</span>
+                                    </div>
+
                                   </div>
+                                </div>
 
                                   <div className="relative shrink-0">
                                     <button 
@@ -826,6 +905,49 @@ const Board = () => {
                 </button>
               </div>
             </form>
+            {/* 5. SECTION KOMENTAR */}
+            <div className="bg-[#0a0a0c] px-10 py-6 border-t border-white/5 flex flex-col gap-4">
+              <h3 className="text-white text-lg font-bold flex items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                Discussion
+              </h3>
+              
+              {/* List Komentar */}
+              <div className="flex flex-col gap-3 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+                {comments.length === 0 ? (
+                  <p className="text-gray-500 text-[13px] italic">Belum ada komentar.</p>
+                ) : (
+                  comments.map((comment) => (
+                    <div key={comment.id} className="flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#7B61FF] flex items-center justify-center text-white text-[12px] font-bold shrink-0">
+                        {comment.Author?.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="bg-white/5 rounded-xl px-4 py-2.5 flex-1 border border-white/5">
+                        <div className="flex items-baseline justify-between mb-1">
+                          <span className="text-white text-[13px] font-bold">{comment.Author?.name}</span>
+                          <span className="text-gray-500 text-[11px]">{new Date(comment.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' })}</span>
+                        </div>
+                        <p className="text-gray-300 text-[13px] leading-relaxed">{comment.text}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Form Tambah Komentar */}
+              <form onSubmit={handleAddComment} className="flex gap-3 mt-2">
+                <input 
+                  type="text" 
+                  placeholder="Write a comment..." 
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-[13px] outline-none focus:border-[#7B61FF]"
+                />
+                <button type="submit" disabled={isCommentLoading || !newComment.trim()} className="px-5 py-2.5 rounded-xl text-white font-bold bg-[#7B61FF] hover:bg-purple-500 text-[13px] disabled:opacity-50 transition-colors">
+                  Send
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}

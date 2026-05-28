@@ -8,4 +8,6 @@ router.get('/column/:columnId', auth, cardController.getCardsByColumn);
 router.put('/:id', auth, cardController.updateCard);
 router.delete('/:id', auth, cardController.deleteCard);
 
+router.post('/:id/comments', auth, cardController.addComment);
+router.get('/:id/comments', auth, cardController.getComments);
 module.exports = router;
