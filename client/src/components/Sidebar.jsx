@@ -44,8 +44,16 @@ const Sidebar = () => {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
             List
           </a>
+          {/* <button 
+            onClick={() => navigate('/profile')} 
+            className="flex items-center gap-3 text-gray-400 hover:text-white w-full p-3 rounded-xl hover:bg-white/5 transition-colors"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span className="font-bold text-[14px]">Profile</span>
+          </button> */}
         </div>
       </div>
+
 
       <div className="mb-8 min-w-[260px]">
         <a href="#" onClick={handleLogout} className="flex items-center gap-4 px-8 py-3 text-white font-bold hover:text-[#7B61FF] transition-colors no-underline">

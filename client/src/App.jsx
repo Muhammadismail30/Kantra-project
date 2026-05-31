@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/protectedRoute';
 import Board from './pages/Board';
 import { SidebarProvider } from './context/SidebarContext';
+import Profile from './pages/Profile';
 
 
 function App() {
@@ -18,6 +19,11 @@ function App() {
           
           <Route path="/Login" element={<Login />} />
           <Route path="/Register" element={<Register />} />
+          <Route path="/Profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
 
           <Route 
             path="/Dashboard"

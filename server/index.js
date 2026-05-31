@@ -11,6 +11,7 @@ const boardRoutes = require('./routes/boardRoutes');
 const authRoutes = require('./routes/authRoutes');
 const columnRoutes = require('./routes/columnRoutes');
 const cardRoutes = require('./routes/cardRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 // Middleware
 app.use(cors()); 
@@ -24,6 +25,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/boards', boardRoutes);
 app.use('/api/columns', columnRoutes);
 app.use('/api/cards', cardRoutes);
+app.use('/api/users', userRoutes);
 
 // Sinkronisasi Tabel
 sequelize.sync({ alter: true })
