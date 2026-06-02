@@ -1,4 +1,4 @@
-const { Board, Column, Card, User } = require('../models');
+const { Board, Column, Card, User, Notification } = require('../models');
 
 // 1. Membuat Board Baru
 exports.createBoard = async (req, res) => {
@@ -137,6 +137,13 @@ exports.addMemberToBoard = async (req, res) => {
         // 3. Tambahkan relasi ke tabel junction (Asumsi menggunakan metode otomatis Sequelize)
         // Pastikan di models/index.js kamu sudah mengatur: Board.belongsToMany(User, { through: 'BoardMembers' })
         await board.addUser(userToAdd);
+
+        // 4. Buat notifikasi untuk user yang diinvite
+        const inviter = await User.findByPk(req.user.id);
+        await Notification.create({
+            user_id: userToAdd.id,
+            message: `Anda telah diundang ke board "${board.title}" oleh ${inviter ? inviter.name : 'seseorang'}.`
+        });
 
         res.status(200).json({ message: 'Anggota berhasil ditambahkan!', user: { id: userToAdd.id, name: userToAdd.name, email: userToAdd.email } });
     } catch (err) {

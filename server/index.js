@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config(); // Pastikan dotenv dipanggil di paling atas
 const { sequelize, connectDB } = require('./config/db');
-const { User, Board, Column, Card } = require('./models');
+const { User, Board, Column, Card, Notification } = require('./models');
 
 const app = express();
 
@@ -12,6 +12,7 @@ const authRoutes = require('./routes/authRoutes');
 const columnRoutes = require('./routes/columnRoutes');
 const cardRoutes = require('./routes/cardRoutes');
 const userRoutes = require('./routes/userRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 // Middleware
 app.use(cors()); 
@@ -26,6 +27,7 @@ app.use('/api/boards', boardRoutes);
 app.use('/api/columns', columnRoutes);
 app.use('/api/cards', cardRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Sinkronisasi Tabel
 sequelize.sync({ alter: true })

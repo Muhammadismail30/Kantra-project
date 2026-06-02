@@ -3,6 +3,7 @@ const Board = require('./Board');
 const Column = require('./Column');
 const Card = require('./Card');
 const Comment = require('./Comment'); // Import model Comment
+const Notification = require('./Notification'); // Import model Notification
 
 // Relasi User -> Board
 User.hasMany(Board, { foreignKey: 'owner_id' });
@@ -35,4 +36,8 @@ Comment.belongsTo(Card, { foreignKey: 'card_id' });
 User.hasMany(Comment, { foreignKey: 'user_id' });
 Comment.belongsTo(User, { foreignKey: 'user_id', as: 'Author' }); // Alias 'Author' agar kita tahu siapa yang komen
 
-module.exports = { User, Board, Column, Card, Comment };
+// Relasi Notifikasi
+User.hasMany(Notification, { foreignKey: 'user_id' });
+Notification.belongsTo(User, { foreignKey: 'user_id' });
+
+module.exports = { User, Board, Column, Card, Comment, Notification };

@@ -19,6 +19,36 @@ const Dashboard = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearchFocused, setIsSearchFocused] = useState(false);
 
+    // --- Notifikasi ---
+    const [notifications, setNotifications] = useState([]);
+    const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+    const fetchNotifications = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const apiUrl = import.meta.env.VITE_API_URL;
+            const response = await axios.get(`${apiUrl}/notifications`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setNotifications(response.data);
+        } catch (error) {
+            console.error("Gagal mengambil notifikasi:", error);
+        }
+    };
+
+    const markNotifAsRead = async (id) => {
+        try {
+            const token = localStorage.getItem('token');
+            const apiUrl = import.meta.env.VITE_API_URL;
+            await axios.put(`${apiUrl}/notifications/${id}/read`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchNotifications();
+        } catch (error) {
+            console.error("Gagal update notifikasi:", error);
+        }
+    };
+
     // --- Mengambil daftar board dari backend ---
     const fetchBoards = async () => {
         try {
@@ -37,6 +67,7 @@ const Dashboard = () => {
 
     useEffect(() => {
         fetchBoards();
+        fetchNotifications();
     }, []);
 
     const handleCreateBoard = async (e) => {
@@ -139,10 +170,69 @@ const Dashboard = () => {
 
                     {/* BAGIAN KANAN */}
                     <div className="flex items-center gap-6">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="cursor-pointer hover:text-[#7B61FF] transition-colors">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
+                        {/* IKON NOTIFIKASI */}
+                        <div className="relative">
+                            <svg 
+                                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
+                                className="cursor-pointer hover:text-[#7B61FF] transition-colors"
+                            >
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            {notifications.filter(n => !n.is_read).length > 0 && (
+                                <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-[#0a0a0c]"></div>
+                            )}
+
+                            {/* Dropdown Notifikasi */}
+                            {isNotifOpen && (
+                                <div className="absolute right-0 mt-3 w-[320px] bg-[#1A1A24] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
+                                    <div className="px-4 py-3 border-b border-white/5 flex justify-between items-center bg-[#121217]">
+                                        <h3 className="font-bold text-[14px] text-white">Notifications</h3>
+                                        <button 
+                                            onClick={async () => {
+                                                try {
+                                                    const token = localStorage.getItem('token');
+                                                    const apiUrl = import.meta.env.VITE_API_URL;
+                                                    await axios.put(`${apiUrl}/notifications/read-all`, {}, {
+                                                        headers: { Authorization: `Bearer ${token}` }
+                                                    });
+                                                    fetchNotifications();
+                                                } catch (e) { console.error(e); }
+                                            }}
+                                            className="text-xs text-[#7B61FF] hover:text-purple-400 font-medium"
+                                        >
+                                            Mark all as read
+                                        </button>
+                                    </div>
+                                    <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                        {notifications.length > 0 ? (
+                                            notifications.map(notif => (
+                                                <div 
+                                                    key={notif.id} 
+                                                    onClick={() => {
+                                                        if (!notif.is_read) markNotifAsRead(notif.id);
+                                                    }}
+                                                    className={`px-4 py-3 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors flex items-start gap-3 ${notif.is_read ? 'opacity-60' : 'bg-white/5'}`}
+                                                >
+                                                    <div className="mt-1 w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: notif.is_read ? 'transparent' : '#7B61FF' }}></div>
+                                                    <div>
+                                                        <p className="text-[13px] text-white/90 leading-snug">{notif.message}</p>
+                                                        <span className="text-[11px] text-gray-500 mt-1 block">
+                                                            {new Date(notif.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' })}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="px-4 py-6 text-center text-white/50 text-sm">
+                                                Tidak ada notifikasi
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
 
                         {/* IKON PROFIL - Tambahkan onClick di baris bawah ini */}
                         <div 

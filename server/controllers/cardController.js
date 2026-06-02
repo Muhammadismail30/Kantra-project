@@ -1,4 +1,4 @@
-const { Card, Comment, User } = require('../models');
+const { Card, Comment, User, Column, Board, Notification } = require('../models');
 
 // 1. Tambah Kartu Baru
 exports.createCard = async (req, res) => {
@@ -13,6 +13,41 @@ exports.createCard = async (req, res) => {
             deadline: deadline || null,
             order_position: order_position || 0
         });
+
+        // --- Kirim Notifikasi ke semua anggota board ---
+        try {
+            const column = await Column.findByPk(column_id, {
+                include: [{
+                    model: Board,
+                    include: [{ model: User, as: 'Users' }]
+                }]
+            });
+
+            if (column && column.Board) {
+                const board = column.Board;
+                const creator = await User.findByPk(req.user.id);
+                const memberIds = board.Users.map(u => u.id);
+                // Tambahkan owner_id juga ke daftar penerima notifikasi
+                if (!memberIds.includes(board.owner_id)) {
+                    memberIds.push(board.owner_id);
+                }
+
+                const notifications = memberIds
+                    .filter(id => id !== req.user.id) // Jangan kirim ke diri sendiri
+                    .map(id => ({
+                        user_id: id,
+                        message: `Tugas baru "${title}" telah ditambahkan ke board "${board.title}" oleh ${creator ? creator.name : 'seseorang'}.`
+                    }));
+
+                if (notifications.length > 0) {
+                    await Notification.bulkCreate(notifications);
+                }
+            }
+        } catch (notifErr) {
+            console.error("Gagal mengirim notifikasi:", notifErr);
+            // Lanjutkan eksekusi meskipun notifikasi gagal
+        }
+        // -------------------------------------------------
 
         res.status(201).json(newCard);
     } catch (err) {
