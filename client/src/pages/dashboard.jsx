@@ -16,6 +16,8 @@ const Dashboard = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newBoardName, setNewBoardName] = useState('');
     const [boards, setBoards] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
 
     // --- Mengambil daftar board dari backend ---
     const fetchBoards = async () => {
@@ -59,6 +61,10 @@ const Dashboard = () => {
         }
     };
 
+    const filteredBoards = boards.filter(board => 
+        board.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div className="h-screen w-screen bg-[#0a0a0c] flex font-sans overflow-hidden text-white m-0 p-0 absolute top-0 left-0">
             
@@ -89,16 +95,46 @@ const Dashboard = () => {
                   </div>
         
                     {/* BAGIAN TENGAH */}
-                    <div className="flex items-center bg-[#17171f] px-4 py-2.5 rounded-full w-[400px] border border-white/5">
-                        <input 
-                            type="text" 
-                            placeholder="Search" 
-                            className="bg-transparent outline-none flex-1 text-[13px] text-white placeholder-white/40"
-                        />
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
+                    <div className="relative">
+                        <div className="flex items-center bg-[#17171f] px-4 py-2.5 rounded-full w-[400px] border border-white/5">
+                            <input 
+                                type="text" 
+                                placeholder="Search boards..." 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onFocus={() => setIsSearchFocused(true)}
+                                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                                className="bg-transparent outline-none flex-1 text-[13px] text-white placeholder-white/40"
+                            />
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </div>
+
+                        {/* Search Suggestions Dropdown */}
+                        {isSearchFocused && searchQuery && (
+                            <div className="absolute top-full left-0 mt-2 w-full bg-[#1A1A24] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
+                                {filteredBoards.length > 0 ? (
+                                    filteredBoards.map(board => (
+                                        <div 
+                                            key={board.id}
+                                            onClick={() => navigate(`/board/${board.id}`)}
+                                            className="px-4 py-3 hover:bg-white/5 cursor-pointer flex items-center gap-3 transition-colors"
+                                        >
+                                            <div className="w-6 h-6 rounded-md bg-[#7B61FF]/20 text-[#7B61FF] flex items-center justify-center">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                                            </div>
+                                            <span className="text-sm font-medium text-white/90">{board.title}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="px-4 py-4 text-center text-white/50 text-sm">
+                                        No boards found
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* BAGIAN KANAN */}
@@ -153,7 +189,7 @@ const Dashboard = () => {
                         <div className="flex flex-wrap gap-6">
                             
                             {/* LOOPING DATA BOARD DARI DATABASE */}
-                            {boards.map((board) => (
+                            {filteredBoards.map((board) => (
                                 <div 
                                     key={board.id}
                                     onClick={() => navigate(`/board/${board.id}`)}
