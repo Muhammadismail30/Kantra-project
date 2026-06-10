@@ -58,6 +58,21 @@ const Sidebar = () => {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
             List
           </button>
+
+          <button
+            onClick={() => navigate('/team')}
+            className={`flex items-center gap-4 px-6 py-3 mx-4 rounded-2xl font-bold transition-colors w-auto text-left ${
+              location.pathname === '/team' ? 'bg-[#0a0a0c] text-white' : 'text-white/70 hover:bg-white/5'
+            }`}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Team
+          </button>
         </div>
       </div>
 

@@ -9,6 +9,7 @@ import Board from './pages/Board';
 import { SidebarProvider } from './context/SidebarContext';
 import Profile from './pages/Profile';
 import List from './pages/List';
+import Team from './pages/Team';
 
 
 function App() {
@@ -43,6 +44,11 @@ function App() {
             }
           />
           <Route path="/list" element={<List />} />
+          <Route path="/team" element={
+            <ProtectedRoute>
+              <Team />
+            </ProtectedRoute>
+          } />
         </Routes>
       </Router>
     </SidebarProvider>
