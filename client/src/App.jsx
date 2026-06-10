@@ -8,6 +8,7 @@ import ProtectedRoute from './components/protectedRoute';
 import Board from './pages/Board';
 import { SidebarProvider } from './context/SidebarContext';
 import Profile from './pages/Profile';
+import List from './pages/List';
 
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/list" element={<List />} />
         </Routes>
       </Router>
     </SidebarProvider>

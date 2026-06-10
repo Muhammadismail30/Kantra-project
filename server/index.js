@@ -1,5 +1,9 @@
 const express = require('express');
 const cors = require('cors');
+// IMPLEMENTASI KEAMANAN: Import Helmet dan Rate-Limit
+const helmet = require('helmet'); 
+const rateLimit = require('express-rate-limit'); 
+
 require('dotenv').config(); // Pastikan dotenv dipanggil di paling atas
 const { sequelize, connectDB } = require('./config/db');
 const { User, Board, Column, Card, Notification } = require('./models');
@@ -14,9 +18,23 @@ const cardRoutes = require('./routes/cardRoutes');
 const userRoutes = require('./routes/userRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 
-// Middleware
 app.use(cors()); 
 app.use(express.json());
+
+// IMPLEMENTASI KEAMANAN: 1. Helmet untuk Security Headers
+app.use(helmet());
+
+// IMPLEMENTASI KEAMANAN: 2. Rate Limiting untuk mencegah DDoS & Brute Force
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // Waktu: 15 menit
+  max: 100, // Batas maksimal: 100 request per IP dalam 15 menit
+  message: 'Terlalu banyak request dari IP Anda, silakan coba lagi nanti.',
+  standardHeaders: true, 
+  legacyHeaders: false, 
+});
+// Terapkan limiter ke semua rute yang berawalan /api
+app.use('/api', apiLimiter);
+
 
 // Jalankan Koneksi DB
 connectDB();

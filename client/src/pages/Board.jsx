@@ -737,13 +737,14 @@ const Board = () => {
                                   backgroundColor: card.color || (card.priority === 'High' ? '#ef4444' : '#f97316') 
                                 }}
                               ></div>
-                              <div className="p-3.5 flex-1 flex flex-col overflow-hidden">
+                              
+                              <div className="p-3.5 flex-1 flex flex-col gap-3 overflow-hidden justify-between w-full">
                                 
-                                <div className="flex justify-between items-start gap-2">
-                                  <div className="flex flex-col items-start flex-1 overflow-hidden">
-  
-                                  {/* AREA ATAS: CHECKBOX & JUDUL */}
-                                  <div className="flex items-start gap-2.5 w-full">
+                                {/* BARIS ATAS: Checkbox, Judul, & Titik Tiga */}
+                                <div className="flex items-start justify-between gap-2 w-full">
+                                  
+                                  {/* Sisi Kiri Atas: Checkbox & Judul */}
+                                  <div className="flex items-start gap-2.5 flex-1 overflow-hidden">
                                     {/* CHECKBOX */}
                                     <div 
                                       onClick={(e) => handleToggleComplete(e, card)}
@@ -757,36 +758,13 @@ const Board = () => {
                                       )}
                                     </div>
                                     
+                                    {/* JUDUL */}
                                     <h3 className={`font-bold text-[15px] leading-snug text-left w-full transition-all ${card.is_completed ? 'text-gray-500 line-through' : 'text-white'}`}>
                                       {card.title}
                                     </h3>
                                   </div>
-                                  
-                                  {/* AREA BAWAH: METADATA (Deadline & Ikon Komentar) */}
-                                  <div className="flex items-center gap-3 mt-2.5 pl-6">
-                                    
-                                    {/* Tanggal Deadline */}
-                                    {card.deadline && (
-                                      <div className={`text-[11px] font-bold flex items-center gap-1.5 px-1.5 py-0.5 rounded-md ${card.is_completed ? 'text-gray-500' : 'bg-white/5 text-gray-400'}`}>
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                        {getDeadlineText(card.deadline)}
-                                      </div>
-                                    )}
 
-                                    {/* Ikon Indikator Komentar */}
-                                    <div 
-                                      className="text-gray-500 hover:text-[#7B61FF] text-[11px] font-bold flex items-center gap-1.5 transition-colors"
-                                      title="Click card to open discussion"
-                                    >
-                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                      </svg>
-                                      <span>Discuss</span>
-                                    </div>
-
-                                  </div>
-                                </div>
-
+                                  {/* Sisi Kanan Atas: Titik Tiga (Menu Edit) */}
                                   <div className="relative shrink-0">
                                     <button 
                                       onClick={(e) => { 
@@ -835,6 +813,33 @@ const Board = () => {
                                       </CardMenuPortal>
                                     )}
                                   </div>
+                                </div>
+
+                                {/* BARIS BAWAH: Deadline & Diskusi */}
+                                <div className="flex items-center justify-between w-full mt-auto">
+                                  
+                                  {/* Sisi Kiri Bawah: Deadline (Tepat di bawah Checkbox) */}
+                                  <div className="flex items-center">
+                                    {card.deadline && (
+                                      <span className={`text-[11px] font-bold truncate ${card.is_completed ? 'text-gray-500' : 'text-gray-400'}`}>
+                                        {getDeadlineText(card.deadline)}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Sisi Kanan Bawah: Ikon Komentar (Tepat di bawah Titik Tiga) */}
+                                  <div className="shrink-0 flex items-center justify-center p-1">
+                                    <div 
+                                      className="text-gray-500 hover:text-[#7B61FF] flex items-center justify-center transition-colors cursor-pointer"
+                                      title="Click card to open discussion"
+                                      onClick={(e) => { e.stopPropagation(); openCardDetail(card); }}
+                                    >
+                                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                      </svg>
+                                    </div>
+                                  </div>
+                                  
                                 </div>
                               </div>
 

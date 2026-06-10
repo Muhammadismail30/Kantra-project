@@ -27,17 +27,29 @@ exports.getAllBoards = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Ambil boards yang dimiliki user secara pribadi
+        // Ambil boards yang dimiliki user secara pribadi, BESERTA Kolom dan Kartunya
         const ownedBoards = await Board.findAll({
-            where: { owner_id: userId }
+            where: { owner_id: userId },
+            include: [
+                {
+                    model: Column,
+                    include: [Card] // Tarik data Card di dalam tiap Column
+                }
+            ]
         });
 
-        // Ambil boards di mana user diundang sebagai anggota
+        // Ambil boards di mana user diundang sebagai anggota, BESERTA Kolom dan Kartunya
         const user = await User.findByPk(userId, {
             include: [{
                 model: Board,
                 as: 'SharedBoards',
-                through: { attributes: [] }
+                through: { attributes: [] },
+                include: [
+                    {
+                        model: Column,
+                        include: [Card] // Tarik data Card untuk shared boards juga
+                    }
+                ]
             }]
         });
 
