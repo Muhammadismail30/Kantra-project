@@ -1,0 +1,25 @@
+<svg width="760" height="280" viewBox="0 0 760 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="760" height="280" rx="18" fill="#0A0A0C"/>
+  <rect x="24" y="24" width="712" height="232" rx="14" fill="#17171F" stroke="#2D2D3A"/>
+  <text x="48" y="62" fill="#FFFFFF" font-family="Consolas, monospace" font-size="20" font-weight="700">Jest Coverage Report</text>
+  <text x="48" y="96" fill="#A3A3B2" font-family="Consolas, monospace" font-size="14">npm test -- --coverage</text>
+  <rect x="48" y="120" width="664" height="1" fill="#2D2D3A"/>
+  <text x="48" y="150" fill="#D8D8E8" font-family="Consolas, monospace" font-size="14">File</text>
+  <text x="260" y="150" fill="#D8D8E8" font-family="Consolas, monospace" font-size="14">% Stmts</text>
+  <text x="370" y="150" fill="#D8D8E8" font-family="Consolas, monospace" font-size="14">% Branch</text>
+  <text x="492" y="150" fill="#D8D8E8" font-family="Consolas, monospace" font-size="14">% Funcs</text>
+  <text x="596" y="150" fill="#D8D8E8" font-family="Consolas, monospace" font-size="14">% Lines</text>
+  <text x="48" y="184" fill="#FFFFFF" font-family="Consolas, monospace" font-size="14">All files</text>
+  <text x="260" y="184" fill="#6EE7B7" font-family="Consolas, monospace" font-size="14">89.88</text>
+  <text x="370" y="184" fill="#6EE7B7" font-family="Consolas, monospace" font-size="14">80.76</text>
+  <text x="492" y="184" fill="#6EE7B7" font-family="Consolas, monospace" font-size="14">100</text>
+  <text x="596" y="184" fill="#6EE7B7" font-family="Consolas, monospace" font-size="14">89.53</text>
+  <text x="48" y="214" fill="#FFFFFF" font-family="Consolas, monospace" font-size="14">cardController.js</text>
+  <text x="260" y="214" fill="#6EE7B7" font-family="Consolas, monospace" font-size="14">85</text>
+  <text x="370" y="214" fill="#6EE7B7" font-family="Consolas, monospace" font-size="14">77.27</text>
+  <text x="492" y="214" fill="#6EE7B7" font-family="Consolas, monospace" font-size="14">100</text>
+  <text x="596" y="214" fill="#6EE7B7" font-family="Consolas, monospace" font-size="14">84.48</text>
+  <rect x="48" y="232" width="188" height="8" rx="4" fill="#2D2D3A"/>
+  <rect x="48" y="232" width="169" height="8" rx="4" fill="#7B61FF"/>
+  <text x="252" y="241" fill="#A3A3B2" font-family="Consolas, monospace" font-size="12">19 tests passed, minimum target 75%</text>
+</svg>
