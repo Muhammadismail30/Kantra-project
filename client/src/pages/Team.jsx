@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../context/SidebarContext';
-import logoKantra from '../assets/logo-kantra.png';
+import logoKantra from '../assets/logo-kantra2.png';
 
 const avatarColors = ['#b8a6a6', '#ef4444', '#7B61FF', '#22c55e', '#3b82f6', '#f97316'];
 
@@ -155,8 +155,16 @@ const Team = () => {
             <div className="text-gray-500 text-center py-10">Belum ada team yang cocok dengan pencarian.</div>
           ) : (
             filteredTeams.map((team) => (
-              <section key={team.boardId} className="bg-[#1A1A24] rounded-2xl px-7 py-5 border border-white/5 mb-6 min-h-[166px]">
-                <h2 className="text-[14px] text-white/80 font-bold mb-6">{team.boardTitle}</h2>
+              <section key={team.boardId} className="bg-[#1A1A24] rounded-2xl p-6 border border-white/5 mb-8 min-h-[166px]">
+                
+                {/* JUDUL BOARD (Sama persis dengan List: Bisa diklik & ada efek hover) */}
+                <h2 
+                  onClick={() => navigate(`/board/${team.boardId}`)}
+                  className="text-[16px] font-bold text-white mb-5 cursor-pointer hover:text-[#7B61FF] hover:underline transition-colors w-fit"
+                  title={`Buka papan ${team.boardTitle}`}
+                >
+                  {team.boardTitle}
+                </h2>
 
                 {team.members.length === 0 ? (
                   <div className="text-sm text-white/40">Belum ada anggota di board ini.</div>

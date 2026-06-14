@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import logoKantra from '../assets/logo-kantra.png';
+import logoKantra from '../assets/logo-kantra2.png';
 import ReactDOM from 'react-dom';
 import Sidebar from '../components/Sidebar'; 
 import { useSidebar } from '../context/SidebarContext'; 
@@ -25,6 +25,8 @@ const Board = () => {
   const [editColColor, setEditColColor] = useState('');   
   const [cardMenuStatus, setCardMenuStatus] = useState({ id: null, top: 0, left: 0 });
   const [colMenuStatus, setColMenuStatus] = useState({ id: null, top: 0, left: 0 });
+  const [searchQuery, setSearchQuery] = useState(''); // Tambahkan ini
+  
 
   // --- STATE UNTUK KOLABORASI (SHARE & TEAM) ---
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -230,10 +232,17 @@ const Board = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [editCardData, setEditCardData] = useState(null);
 
+  const [discussionCard, setDiscussionCard] = useState(null);
+
   // --- STATE UNTUK KOMENTAR ---
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [isCommentLoading, setIsCommentLoading] = useState(false);
+
+  const openDiscussion = (card) => {
+    setDiscussionCard(card);
+    fetchComments(card.id);
+  };
 
   // State untuk Modal Add Card
   const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
@@ -454,15 +463,31 @@ const Board = () => {
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
+
+    // 1. Deteksi otomatis: Gunakan ID dari discussionCard, atau fallback ke selectedCard
+    const activeCardId = discussionCard ? discussionCard.id : (selectedCard ? selectedCard.id : null);
+    
+    // Jika entah bagaimana keduanya null, hentikan proses agar aplikasi tidak crash
+    if (!activeCardId) {
+      console.error("Tidak ada kartu yang aktif untuk dikomentari.");
+      return;
+    }
+
     setIsCommentLoading(true);
     try {
       const token = localStorage.getItem('token');
       const apiUrl = import.meta.env.VITE_API_URL;
-      await axios.post(`${apiUrl}/cards/${selectedCard.id}/comments`, { text: newComment }, { headers: { Authorization: `Bearer ${token}` } });
+      
+      // 2. Gunakan activeCardId untuk mengirim API
+      await axios.post(`${apiUrl}/cards/${activeCardId}/comments`, { text: newComment }, { headers: { Authorization: `Bearer ${token}` } });
+      
       setNewComment('');
-      fetchComments(selectedCard.id); // Refresh komen
-    } catch (error) { console.error("Gagal tambah komen:", error); }
-    finally { setIsCommentLoading(false); }
+      fetchComments(activeCardId); // Refresh komen
+    } catch (error) { 
+      console.error("Gagal tambah komen:", error); 
+    } finally { 
+      setIsCommentLoading(false); 
+    }
   };
 
   if (isLoading) return <div className="h-screen w-screen bg-[#0a0a0c] flex items-center justify-center text-white"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7B61FF]"></div></div>;
@@ -478,9 +503,10 @@ const Board = () => {
       <main className="flex-1 flex flex-col relative overflow-hidden">
         
         {/* Navbar Board */}
-        <header className="h-[72px] flex items-center justify-between px-8 bg-[#0a0a0c] shrink-0 border-b border-white/5">
+        {/* Navbar Board */}
+        <header className="h-[72px] flex items-center justify-between px-8 bg-[#0a0a0c] shrink-0">
           
-          {/* BAGIAN KIRI: Tombol Menu, Back, dan Logo */}
+          {/* 1. BAGIAN KIRI: Toggle Sidebar, Logo, & Judul Board */}
           <div className="flex items-center gap-4">
             <button 
               onClick={toggleSidebar} 
@@ -488,37 +514,51 @@ const Board = () => {
                 isSidebarOpen ? 'w-0 h-0 opacity-0 p-0' : 'w-10 h-10 opacity-100 p-2'
               }`}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
                 <line x1="3" y1="18" x2="21" y2="18"></line>
               </svg>
             </button>
-
-            <img src={logoKantra} alt="Kantra Logo" className="h-7 w-auto" />
-          </div>
-
-          
-          {/* BAGIAN TENGAH */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-[#7B61FF]"></div>
-            
-            <h1 className="text-lg font-bold tracking-tight">
-              {boardDetail?.title || 'Loading...'}
-            </h1>
+            <img src={logoKantra} alt="Kantra Logo" className="h-7 w-auto shrink-0 mr-4" />
             
           </div>
 
-          {/* BAGIAN KANAN: Auto-saved, Team Avatar, Share Button */}
-          <div className="flex items-center gap-4">
-            <span className="text-[12px] text-gray-500 font-medium mr-4">Auto-saved</span>
+          {/* 2. BAGIAN TENGAH: Search Bar */}
+          <div className="flex-1 max-w-[600px] px-8">
+            <div className="relative w-full">
+              <input 
+                type="text" 
+                placeholder="Search" 
+                /* Jika belum ada, pastikan untuk mendeklarasikan: const [searchQuery, setSearchQuery] = useState(''); di awal file */
+                value={searchQuery || ''}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#1A1A24] rounded-full px-5 py-2.5 text-white text-[14px] outline-none focus:bg-[#252530] transition-colors pr-11 border-none"
+              />
+              <svg className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-white transition-colors" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+          </div>
+
+          {/* 3. BAGIAN KANAN: Tombol Share, Notifikasi & Profil */}
+          <div className="flex items-center gap-6">
             
-            {/* IKON NOTIFIKASI */}
-            <div className="relative mr-2">
+            {/* Tombol Share */}
+            <button 
+              onClick={() => setIsShareModalOpen(true)}
+              className="bg-white text-black px-5 py-1.5 rounded-md font-bold text-sm hover:bg-gray-200 transition-colors"
+            >
+              Share
+            </button>
+
+            {/* Ikon Notifikasi (Ditambah logika dropdown notif dari list.jsx) */}
+            <div className="relative">
                 <svg 
                     onClick={() => setIsNotifOpen(!isNotifOpen)}
                     width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
-                    className="cursor-pointer hover:text-[#7B61FF] transition-colors"
+                    className="cursor-pointer text-gray-400 hover:text-white transition-colors"
                 >
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -576,29 +616,26 @@ const Board = () => {
                     </div>
                 )}
             </div>
-
-            <div className="flex items-center gap-4">
-              {/* Avatar Anggota Tim */}
-              <div className="flex -space-x-3">
-                {boardMembers.slice(0, 4).map((member, idx) => (
-                  <div key={idx} className="w-9 h-9 rounded-full bg-[#7B61FF] border-2 border-[#0a0a0c] flex items-center justify-center text-white text-xs font-bold shadow-sm" title={member.name}>
-                    {member.name.charAt(0).toUpperCase()}
-                  </div>
-                ))}
-                {boardMembers.length > 4 && (
-                  <div className="w-9 h-9 rounded-full bg-[#1A1A24] border-2 border-[#0a0a0c] flex items-center justify-center text-gray-400 text-xs font-bold shadow-sm">
-                    +{boardMembers.length - 4}
-                  </div>
-                )}
-              </div>
-
-              <button onClick={() => setIsShareModalOpen(true)} className="bg-[#e5e5e5] text-black px-6 py-2 rounded-lg font-bold text-sm hover:bg-white transition-colors shadow-sm flex items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
-                Share
-              </button>
+            
+            {/* Ikon Profil */}
+            <div 
+              onClick={() => navigate('/Profile')} 
+              className="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer border-2 border-transparent hover:border-[#7B61FF] transition-colors shrink-0"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#17171f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
             </div>
+            
           </div>
         </header>
+
+        <div className="px-8 py-5 shrink-0 flex items-center">
+          <h1 className="text-white text-[24px] font-bold tracking-tight">
+            {boardDetail?.title || 'Loading Board...'}
+          </h1>
+        </div>
 
         {/* DRAG DROP CONTEXT WRAPPER */}
         <DragDropContext onDragEnd={onDragEnd}>
@@ -740,17 +777,19 @@ const Board = () => {
                               
                               <div className="p-3.5 flex-1 flex flex-col gap-3 overflow-hidden justify-between w-full">
                                 
-                                {/* BARIS ATAS: Checkbox, Judul, & Titik Tiga */}
-                                <div className="flex items-start justify-between gap-2 w-full">
+                                {/* AREA ATAS: CHECKBOX & JUDUL */}
+                                <div className="relative flex items-start w-full min-h-[22px]">
                                   
-                                  {/* Sisi Kiri Atas: Checkbox & Judul */}
-                                  <div className="flex items-start gap-2.5 flex-1 overflow-hidden">
-                                    {/* CHECKBOX */}
-                                    <div 
-                                      onClick={(e) => handleToggleComplete(e, card)}
-                                      className={`mt-0.5 w-4 h-4 shrink-0 rounded-[4px] border-[1.5px] flex items-center justify-center cursor-pointer transition-all ${card.is_completed ? 'bg-green-500 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'border-gray-500 hover:border-[#7B61FF]'}`}
-                                      title="Mark as completed"
-                                    >
+                                  {/* CHECKBOX (Posisi Absolute agar tidak menabrak judul) */}
+                                  <div 
+                                    onClick={(e) => handleToggleComplete(e, card)}
+                                    className={`absolute left-0 top-[2px] w-4 h-4 rounded-[4px] border-[1.5px] flex items-center justify-center cursor-pointer transition-all duration-300 z-10 ${
+                                      card.is_completed 
+                                        ? 'bg-green-500 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)] opacity-100' 
+                                        : 'border-gray-500 hover:border-[#7B61FF] opacity-0 group-hover:opacity-100'
+                                    }`}
+                                    title="Mark as completed"
+                                  >
                                       {card.is_completed && (
                                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                                           <polyline points="20 6 9 17 4 12"></polyline>
@@ -758,11 +797,14 @@ const Board = () => {
                                       )}
                                     </div>
                                     
-                                    {/* JUDUL */}
-                                    <h3 className={`font-bold text-[15px] leading-snug text-left w-full transition-all ${card.is_completed ? 'text-gray-500 line-through' : 'text-white'}`}>
-                                      {card.title}
-                                    </h3>
-                                  </div>
+                                    {/* JUDUL KARTU (Bergeser mulus menggunakan padding) */}
+                                  <h3 className={`font-bold text-[15px] leading-snug text-left w-full transition-all duration-300 ${
+                                    card.is_completed 
+                                      ? 'pl-7 text-gray-500 line-through' 
+                                      : 'pl-0 group-hover:pl-7 text-white'
+                                  }`}>
+                                    {card.title}
+                                  </h3>
 
                                   {/* Sisi Kanan Atas: Titik Tiga (Menu Edit) */}
                                   <div className="relative shrink-0">
@@ -832,7 +874,7 @@ const Board = () => {
                                     <div 
                                       className="text-gray-500 hover:text-[#7B61FF] flex items-center justify-center transition-colors cursor-pointer"
                                       title="Click card to open discussion"
-                                      onClick={(e) => { e.stopPropagation(); openCardDetail(card); }}
+                                      onClick={(e) => { e.stopPropagation(); openDiscussion(card); }}
                                     >
                                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -1005,54 +1047,81 @@ const Board = () => {
                 </button>
               </div>
             </form>
-            {/* 5. SECTION KOMENTAR */}
-            <div className="bg-[#0a0a0c] px-10 py-6 border-t border-white/5 flex flex-col gap-4">
-              <h3 className="text-white text-lg font-bold flex items-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                Discussion
-              </h3>
+          </div>
+        </div>
+      )}
+
+      <style>{`.custom-scrollbar::-webkit-scrollbar { width: 4px; } .custom-scrollbar::-webkit-scrollbar-track { background: transparent; } .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; } .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); }`}</style>
+
+      {/* ================= MODAL DISCUSSION (BARU) ================= */}
+      {discussionCard && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-[#1A1A24] rounded-xl w-full max-w-[450px] flex flex-col relative shadow-[0_0_25px_10px_rgba(0,0,0,0.5)] border border-white/5 overflow-hidden animate-in fade-in zoom-in duration-200">
+            
+            {/* Header Modal */}
+            <div className="p-5 flex justify-between items-center border-b border-white/5">
+              <h2 className="text-white text-[18px] font-bold">Comments</h2>
+              <button onClick={() => setDiscussionCard(null)} className="text-white hover:text-red-500 transition-colors">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+
+            <div className="p-5 flex flex-col gap-6">
               
+              {/* Form Tulis Komentar */}
+              <form onSubmit={handleAddComment}>
+                <textarea 
+                  rows="3" 
+                  placeholder="Write a comment..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAddComment(e);
+                    }
+                  }}
+                  className="w-full bg-transparent border border-gray-500 rounded-xl px-4 py-3 text-white text-[14px] outline-none focus:border-white transition-colors resize-none placeholder:text-gray-500"
+                ></textarea>
+              </form>
+
               {/* List Komentar */}
-              <div className="flex flex-col gap-3 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+              <div className="flex flex-col gap-5 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
                 {comments.length === 0 ? (
-                  <p className="text-gray-500 text-[13px] italic">Belum ada komentar.</p>
+                  <p className="text-gray-500 text-[13px] text-center italic py-4">Belum ada komentar.</p>
                 ) : (
                   comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#7B61FF] flex items-center justify-center text-white text-[12px] font-bold shrink-0">
-                        {comment.Author?.name?.charAt(0).toUpperCase()}
+                    <div key={comment.id} className="flex gap-4 items-start">
+                      
+                      {/* Avatar */}
+                      <div className="w-[42px] h-[42px] rounded-full bg-[#E5E5E5] flex items-center justify-center shrink-0 mt-0.5">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1A24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
                       </div>
-                      <div className="bg-white/5 rounded-xl px-4 py-2.5 flex-1 border border-white/5">
-                        <div className="flex items-baseline justify-between mb-1">
-                          <span className="text-white text-[13px] font-bold">{comment.Author?.name}</span>
-                          <span className="text-gray-500 text-[11px]">{new Date(comment.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' })}</span>
-                        </div>
-                        <p className="text-gray-300 text-[13px] leading-relaxed">{comment.text}</p>
+
+                      {/* Detail Komentar */}
+                      <div className="flex flex-col leading-tight">
+                        <span className="text-white text-[12px] font-bold">
+                          {comment.Author?.email || comment.Author?.name || 'Unknown User'}
+                        </span>
+                        <span className="text-gray-300 text-[14px] mt-1 whitespace-pre-wrap">
+                          {comment.text}
+                        </span>
+                        <span className="text-gray-500 text-[10px] mt-1.5">
+                          {new Date(comment.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' })}
+                        </span>
                       </div>
                     </div>
                   ))
                 )}
               </div>
 
-              {/* Form Tambah Komentar */}
-              <form onSubmit={handleAddComment} className="flex gap-3 mt-2">
-                <input 
-                  type="text" 
-                  placeholder="Write a comment..." 
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-[13px] outline-none focus:border-[#7B61FF]"
-                />
-                <button type="submit" disabled={isCommentLoading || !newComment.trim()} className="px-5 py-2.5 rounded-xl text-white font-bold bg-[#7B61FF] hover:bg-purple-500 text-[13px] disabled:opacity-50 transition-colors">
-                  Send
-                </button>
-              </form>
             </div>
           </div>
         </div>
       )}
-
-      <style>{`.custom-scrollbar::-webkit-scrollbar { width: 4px; } .custom-scrollbar::-webkit-scrollbar-track { background: transparent; } .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; } .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); }`}</style>
 
       {/* ================= MODAL SHARE BOARD ================= */}
       {isShareModalOpen && (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import logoKantra from '../assets/logo-kantra.png'; 
+import logoKantra from '../assets/logo-kantra2.png'; 
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -106,16 +106,16 @@ const Dashboard = () => {
             <main className="flex-1 flex flex-col overflow-y-auto relative">
                 
                 {/* Navbar Atas */}
-                <header className="flex items-center justify-between px-10 py-6">
+                <header className="h-[72px] flex items-center justify-between px-8 bg-[#0a0a0c] shrink-0">
           
-                  {/* 1. BAGIAN KIRI*/}
-                  <div className="flex items-center w-[300px]">
-                    <button 
-                      onClick={toggleSidebar} 
-                      className={`flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-lg transition-all duration-300 overflow-hidden ${
-                        isSidebarOpen ? 'w-0 h-0 opacity-0 mr-0 p-0' : 'w-10 h-10 opacity-100 mr-4 p-2'
-                      }`}
-                    >
+                    {/* 1. BAGIAN KIRI */}
+                    <div className="flex items-center gap-4">
+                        <button 
+                            onClick={toggleSidebar} 
+                            className={`flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-lg transition-all duration-300 overflow-hidden ${
+                            isSidebarOpen ? 'w-0 h-0 opacity-0 p-0' : 'w-10 h-10 opacity-100 p-2'
+                            }`}
+                        >
                       <svg className="shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="3" y1="12" x2="21" y2="12"></line>
                         <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -126,22 +126,21 @@ const Dashboard = () => {
                   </div>
         
                     {/* BAGIAN TENGAH */}
-                    <div className="relative">
-                        <div className="flex items-center bg-[#17171f] px-4 py-2.5 rounded-full w-[400px] border border-white/5">
+                    <div className="flex-1 max-w-[600px] px-8">
+                        <div className="relative w-full">
                             <input 
                                 type="text" 
-                                placeholder="Search boards..." 
+                                placeholder="Search" 
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 onFocus={() => setIsSearchFocused(true)}
                                 onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-                                className="bg-transparent outline-none flex-1 text-[13px] text-white placeholder-white/40"
+                                className="w-full bg-[#1A1A24] rounded-full px-5 py-2.5 text-white text-[14px] outline-none focus:bg-[#252530] transition-colors pr-11"
                             />
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-white transition-colors" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                             </svg>
-                        </div>
 
                         {/* Search Suggestions Dropdown */}
                         {isSearchFocused && searchQuery && (
@@ -165,7 +164,9 @@ const Dashboard = () => {
                                     </div>
                                 )}
                             </div>
+                        
                         )}
+                        </div>
                     </div>
 
                     {/* BAGIAN KANAN */}
