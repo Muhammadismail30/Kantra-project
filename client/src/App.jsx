@@ -1,37 +1,58 @@
-import { useEffect, useState } from 'react'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Welcome from './pages/Welcome';
+import Dashboard from './pages/Dashboard';
+import ProtectedRoute from './components/protectedRoute';
+import Board from './pages/Board';
+import { SidebarProvider } from './context/SidebarContext';
+import Profile from './pages/Profile';
+import List from './pages/List';
+import Team from './pages/Team';
+
 
 function App() {
-  const [message, setMessage] = useState('Sedang menghubungkan ke API...')
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    // Memanggil API yang kita buat di Express tadi
-    fetch('http://localhost:5000/api/test')
-      .then((res) => {
-        if (!res.ok) throw new Error('Gagal konek ke server')
-        return res.json()
-      })
-      .then((data) => setMessage(data.message))
-      .catch((err) => {
-        setError(err.message)
-        console.error("Error:", err)
-      })
-  }, [])
-
   return (
-    <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'sans-serif' }}>
-      <h1>Web Engineering Project</h1>
-      <div style={{ 
-        padding: '10px', 
-        border: '1px solid #ccc', 
-        display: 'inline-block',
-        backgroundColor: error ? '#ffebee' : '#e8f5e9'
-      }}>
-        <strong>Status API: </strong> 
-        {error ? <span style={{color: 'red'}}>{error}</span> : <span>{message}</span>}
-      </div>
-    </div>
-  )
+    <SidebarProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Welcome />} />
+          
+          <Route path="/Login" element={<Login />} />
+          <Route path="/Register" element={<Register />} />
+          <Route path="/Profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+
+          <Route 
+            path="/Dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/board/:id"
+            element={
+              <ProtectedRoute>
+                <Board />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/list" element={<List />} />
+          <Route path="/team" element={
+            <ProtectedRoute>
+              <Team />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </Router>
+    </SidebarProvider>
+  );
 }
 
-export default App
+export default App;
